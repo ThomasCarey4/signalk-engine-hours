@@ -18,6 +18,10 @@ module.exports = function createPlugin(app) {
   // missed updates without counting a long data gap / forward clock jump as
   // continuous runtime.
   const MAX_STEP_PERIODS = 3;
+  // Revolutions (rev/s, SignalK's Hz) at or below this count as stopped. A
+  // stopped engine's sensor can report small phantom values — 0.03–4 Hz has
+  // been seen at anchor — while any running diesel idles far above 5 Hz.
+  const DEFAULT_RUNNING_THRESHOLD = 5;
 
   let engines = { paths: [] };
   let unsubscribes = [];
@@ -78,6 +82,10 @@ module.exports = function createPlugin(app) {
 
   plugin.start = function start(options) {
     const updateRate = Math.max(1, options.updateRate || 60);
+    const runningThreshold = sanitizeNumber(
+      options.runningThreshold,
+      DEFAULT_RUNNING_THRESHOLD,
+    );
     enginesFile = join(app.getDataDirPath(), 'engines.json');
 
     function reportData(engine) {
@@ -244,7 +252,9 @@ module.exports = function createPlugin(app) {
             const deltaTime = Number.isFinite(tsMs)
               ? new Date(tsMs).toISOString()
               : new Date().toISOString();
-            engine.running = v.value > 0 || v.value === 'started';
+            engine.running =
+              (typeof v.value === 'number' && v.value > runningThreshold) ||
+              v.value === 'started';
 
             if (previousEngine.running && previousEngine.time) {
               const prevMs = Date.parse(previousEngine.time);
@@ -373,6 +383,13 @@ module.exports = function createPlugin(app) {
         minimum: 1,
         title:
           'How often engine revolutions/state is monitored. Default value is 60s',
+      },
+      runningThreshold: {
+        type: 'number',
+        default: DEFAULT_RUNNING_THRESHOLD,
+        minimum: 0,
+        title:
+          'Revolutions (rev/s) above which an engine counts as running. Filters sensor noise from stopped engines. Default 5 rev/s (300 rpm)',
       },
     },
   };

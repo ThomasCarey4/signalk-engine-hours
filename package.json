@@ -1,7 +1,7 @@
 {
-  "name": "signalk-engine-hours",
-  "version": "1.6.0",
-  "description": "Persistent engine hours logger. Log all engines, which report revolutions to SignalK",
+  "name": "signalk-engine-hours-seren",
+  "version": "1.7.0",
+  "description": "Persistent engine hours logger with a noise threshold. Fork of signalk-engine-hours.",
   "main": "index.js",
   "engines": {
     "node": ">=18.0.0"
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/KEGustafsson/signalk-engine-hours.git"
+    "url": "git+https://github.com/ThomasCarey4/signalk-engine-hours.git"
   },
   "keywords": [
     "signalk-node-server-plugin",
@@ -23,15 +23,15 @@
   ],
   "signalk": {
     "appIcon": "./icons/icon-72x72.png",
-    "displayName": "SignalK Engine Hours"
+    "displayName": "SignalK Engine Hours (Seren fork)"
   },
   "signalk-plugin-enabled-by-default": false,
   "author": "Karl-Erik Gustafsson",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/KEGustafsson/signalk-engine-hours/issues"
+    "url": "https://github.com/ThomasCarey4/signalk-engine-hours/issues"
   },
-  "homepage": "https://github.com/KEGustafsson/signalk-engine-hours#readme",
+  "homepage": "https://github.com/ThomasCarey4/signalk-engine-hours#readme",
   "overrides": {
     "serialize-javascript": "^7.0.5"
   },
@@ -44,5 +44,8 @@
     "mocha": "^10.2.0",
     "prettier": "^3.8.3",
     "sinon": "^21.0.3"
-  }
+  },
+  "contributors": [
+    "Thomas Carey"
+  ]
 }

@@ -34,6 +34,13 @@ describe('signalk-engine-hours plugin', function () {
     };
   }
 
+  function lastValuesMsg() {
+    const calls = app.handleMessage
+      .getCalls()
+      .filter((c) => c.args[1].updates[0].values);
+    return calls[calls.length - 1].args[1];
+  }
+
   beforeEach(async function () {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'sk-engine-test-'));
     deltaCallback = null;
@@ -84,6 +91,8 @@ describe('signalk-engine-hours plugin', function () {
       ]);
       assert.equal(plugin.schema.properties.updateRate.default, 60);
       assert.equal(plugin.schema.properties.updateRate.minimum, 1);
+      assert.equal(plugin.schema.properties.runningThreshold.default, 5);
+      assert.equal(plugin.schema.properties.runningThreshold.minimum, 0);
     });
   });
 
@@ -324,6 +333,59 @@ describe('signalk-engine-hours plugin', function () {
         .filter((c) => c.args[1].updates[0].values);
       const lastMsg = calls[calls.length - 1].args[1];
       assert.equal(lastMsg.updates[0].values[0].value, 120);
+    });
+
+    it('should not accumulate time for sub-threshold sensor noise (default 5 rev/s)', function () {
+      // Stopped engines can report phantom revolutions (seen 0.03–4 Hz at anchor).
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.04, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.07, ts(60)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 3.3, ts(120)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 5, ts(180)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.05, ts(240)));
+
+      const lastMsg = lastValuesMsg();
+      assert.equal(lastMsg.updates[0].values[0].value, 0);
+    });
+
+    it('should accrue time just above the threshold', function () {
+      deltaCallback(makeDelta('propulsion.main.revolutions', 5.1, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 13, ts(60)));
+
+      const lastMsg = lastValuesMsg();
+      assert.equal(lastMsg.updates[0].values[0].value, 60);
+    });
+
+    it('should stop accruing when revolutions fall to noise level', function () {
+      deltaCallback(makeDelta('propulsion.main.revolutions', 40, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 40, ts(60)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.05, ts(120)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.05, ts(180)));
+
+      // 0->60, 60->120 accrue (prev running); 120->180 does not.
+      const lastMsg = lastValuesMsg();
+      assert.equal(lastMsg.updates[0].values[0].value, 120);
+    });
+
+    it('should honour a custom runningThreshold', function () {
+      plugin.stop();
+      plugin.start({ ...defaultOptions, runningThreshold: 0 });
+
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.04, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.04, ts(60)));
+
+      const lastMsg = lastValuesMsg();
+      assert.equal(lastMsg.updates[0].values[0].value, 60);
+    });
+
+    it('should fall back to the default for an invalid runningThreshold', function () {
+      plugin.stop();
+      plugin.start({ ...defaultOptions, runningThreshold: -1 });
+
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.04, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 0.04, ts(60)));
+
+      const lastMsg = lastValuesMsg();
+      assert.equal(lastMsg.updates[0].values[0].value, 0);
     });
 
     it('should track multiple engines independently', function () {
