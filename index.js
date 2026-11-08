@@ -20,8 +20,9 @@ module.exports = function createPlugin(app) {
   const MAX_STEP_PERIODS = 3;
   // Revolutions (rev/s, SignalK's Hz) at or below this count as stopped. A
   // stopped engine's sensor can report small phantom values — 0.03–4 Hz has
-  // been seen at anchor — while any running diesel idles far above 5 Hz.
-  const DEFAULT_RUNNING_THRESHOLD = 5;
+  // been seen at anchor, and up to ~8 Hz when the tacho cable picks up inverter
+  // load. Default 800 rpm = 13.33 Hz.
+  const DEFAULT_RUNNING_THRESHOLD = 800 / 60;
 
   let engines = { paths: [] };
   let unsubscribes = [];
@@ -389,7 +390,7 @@ module.exports = function createPlugin(app) {
         default: DEFAULT_RUNNING_THRESHOLD,
         minimum: 0,
         title:
-          'Revolutions (rev/s) above which an engine counts as running. Filters sensor noise from stopped engines. Default 5 rev/s (300 rpm)',
+          'Revolutions (rev/s) above which an engine counts as running. Filters sensor noise from stopped engines. Default 13.33 rev/s (800 rpm)',
       },
     },
   };

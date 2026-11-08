@@ -1,6 +1,6 @@
 {
   "name": "signalk-engine-hours-seren",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Persistent engine hours logger with a noise threshold. Fork of signalk-engine-hours.",
   "main": "index.js",
   "engines": {

@@ -2,7 +2,7 @@
 
 Fork of [KEGustafsson/signalk-engine-hours](https://github.com/KEGustafsson/signalk-engine-hours) published as `signalk-engine-hours-seren`.
 
-**What's different:** the original counts an engine as running whenever `revolutions > 0`. A stopped engine's rev sensor can report small phantom values (0.03–4 rev/s were seen at anchor), and every one of those added time to `runTime`. On one boat that inflated four months of engine hours by 45–70%. This fork adds a **`runningThreshold`** setting (rev/s, default **5** = 300 rpm). Revolutions at or below it count as stopped. Set it to `0` for the original behaviour.
+**What's different:** the original counts an engine as running whenever `revolutions > 0`. A stopped engine's rev sensor can report small phantom values (0.03–4 rev/s were seen at anchor), and every one of those added time to `runTime`. On one boat that inflated four months of engine hours by 45–70%. This fork adds a **`runningThreshold`** setting (rev/s, default **13.33** = 800 rpm). Revolutions at or below it count as stopped. Set it to `0` for the original behaviour.
 
 The plugin id is still `signalk-engine-hours`, so an existing `engines.json`, plugin configuration and web app carry over. **Uninstall the original package before installing this one.** Both packages register the same plugin id.
 
@@ -28,3 +28,4 @@ Signal K engine hours logger keeps engine runtime data in persistent storage. En
 - v1.5.0 feat: engine hours reporing optimized 
 - v1.6.0 fix: accrual clamp, auth, input hardening, UI state
 - v1.7.0 (seren fork) feat: runningThreshold — ignore sub-threshold revolutions (sensor noise from stopped engines)
+- v1.7.1 (seren fork) fix: default runningThreshold 5 -> 800 rpm (13.33 rev/s); inverter pickup on the tacho cable read up to ~8 Hz
