@@ -91,7 +91,7 @@ describe('signalk-engine-hours plugin', function () {
       ]);
       assert.equal(plugin.schema.properties.updateRate.default, 60);
       assert.equal(plugin.schema.properties.updateRate.minimum, 1);
-      assert.equal(plugin.schema.properties.runningThreshold.default, 5);
+      assert.equal(plugin.schema.properties.runningThreshold.default, 800 / 60);
       assert.equal(plugin.schema.properties.runningThreshold.minimum, 0);
     });
   });
@@ -341,6 +341,8 @@ describe('signalk-engine-hours plugin', function () {
       deltaCallback(makeDelta('propulsion.main.revolutions', 0.07, ts(60)));
       deltaCallback(makeDelta('propulsion.main.revolutions', 3.3, ts(120)));
       deltaCallback(makeDelta('propulsion.main.revolutions', 5, ts(180)));
+      // Inverter load on the tacho cable has been seen to read up to ~8 Hz.
+      deltaCallback(makeDelta('propulsion.main.revolutions', 7.9, ts(210)));
       deltaCallback(makeDelta('propulsion.main.revolutions', 0.05, ts(240)));
 
       const lastMsg = lastValuesMsg();
@@ -348,8 +350,8 @@ describe('signalk-engine-hours plugin', function () {
     });
 
     it('should accrue time just above the threshold', function () {
-      deltaCallback(makeDelta('propulsion.main.revolutions', 5.1, ts(0)));
-      deltaCallback(makeDelta('propulsion.main.revolutions', 13, ts(60)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 13.4, ts(0)));
+      deltaCallback(makeDelta('propulsion.main.revolutions', 13.4, ts(60)));
 
       const lastMsg = lastValuesMsg();
       assert.equal(lastMsg.updates[0].values[0].value, 60);
